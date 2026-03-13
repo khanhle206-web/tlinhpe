@@ -278,7 +278,7 @@
         /* ============================================================
            13. FOOTER
            ============================================================ */
-        footer { text-align: center; padding: 40px 0; border-top: 1px solid var(--glass-border); margin-top: 50px;}
+        footer { text-align: center; padding: 40px 20px 100px 20px; border-top: 1px solid var(--glass-border); margin-top: 50px;}
         .footer-logo { font-size: 3rem; color: var(--pink-accent); font-family: 'Playfair Display'; margin-bottom: 10px; animation: heartbeat 2s infinite;}
         
         /* Fixed Elements */
@@ -299,7 +299,8 @@
             /* Điều chỉnh không gian */
             .section-p { padding: 80px 0; }
             .container { padding: 0 20px; }
-            .hero-content, .about-grid, .pref-grid { grid-template-columns: 1fr; gap: 30px; }
+            .hero-content { flex-direction: column; justify-content: center; gap: 40px; }
+            .about-grid, .pref-grid { display: grid; grid-template-columns: 1fr; gap: 30px; }
             
             /* Navbar & Menu Hamburger */
             nav { padding: 15px 25px; border-radius: 30px; }
