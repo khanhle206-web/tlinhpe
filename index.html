@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cá's LED World 🐟 | Thùy Linh</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,500;1,700;1,900&family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* ============================================================
+           1. CORE CSS VARIABLES & THEMES
+           ============================================================ */
+        :root {
+            --bg-body: #FFE5EC;
+            --bg-bento: rgba(255, 255, 255, 0.7);
+            --text-main: #331A1F;
+            --text-sub: #5E4046;
+            --pink-accent: #FF4D6D;
+            --pink-dark: #FB6F92;
+            --led-shadow: 0 0 15px rgba(255, 77, 109, 0.5);
+            --glass-border: rgba(255, 77, 109, 0.3);
+            --cursor-main: #FF4D6D;
+            --nav-bg: rgba(255, 229, 236, 0.85);
+        }
+
+        [data-theme="dark"] {
+            --bg-body: #0F0005;
+            --bg-bento: rgba(25, 0, 10, 0.65);
+            --text-main: #FFF0F5;
+            --text-sub: #FFC2D1;
+            --pink-accent: #FF8FAB;
+            --pink-dark: #FB6F92;
+            --led-shadow: 0 0 25px rgba(255, 143, 171, 0.8), 0 0 45px rgba(255, 143, 171, 0.4);
+            --glass-border: rgba(255, 143, 171, 0.2);
+            --cursor-main: #FF8FAB;
+            --nav-bg: rgba(15, 0, 5, 0.85);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            transition: background 0.5s ease, color 0.5s ease;
+            cursor: none;
+        }
+
+        h1, h2, h3, h4 { font-family: 'Playfair Display', serif; font-weight: 700; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 25px; position: relative; z-index: 10; }
+        .section-p { padding: 120px 0; }
+        .text-center { text-align: center; }
+
+        /* ============================================================
+           2. ANIMATIONS & EFFECTS
+           ============================================================ */
+        @keyframes glowingButton {
+            0% { box-shadow: 0 0 5px var(--pink-accent), inset 0 0 5px var(--pink-accent); }
+            50% { box-shadow: 0 0 20px var(--pink-accent), inset 0 0 10px var(--pink-accent); }
+            100% { box-shadow: 0 0 5px var(--pink-accent), inset 0 0 5px var(--pink-accent); }
+        }
+        @keyframes float { 0% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-15px) rotate(5deg); } 100% { transform: translateY(0) rotate(0); } }
+        @keyframes bgGradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes heartbeat { 0% { transform: scale(1); } 25% { transform: scale(1.1); } 50% { transform: scale(1); } 75% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @keyframes borderPulse { 0% { border-color: rgba(255,143,171,0.2); } 50% { border-color: rgba(255,143,171,1); } 100% { border-color: rgba(255,143,171,0.2); } }
+
+        .reveal { opacity: 0; transform: translateY(80px); transition: all 1s cubic-bezier(0.5, 0, 0, 1); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+        /* ============================================================
+           3. ENTRANCE SCREEN
+           ============================================================ */
+        #entrance-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            background: #0F0005; z-index: 999999; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; transition: opacity 1s ease, visibility 1s;
+        }
+        #entrance-screen h1 { color: #FF8FAB; font-size: 3rem; margin-bottom: 30px; text-shadow: 0 0 20px rgba(255,143,171,0.5); text-align: center;}
+        .enter-btn {
+            padding: 15px 40px; font-size: 1.5rem; background: transparent; color: #FF8FAB;
+            border: 2px solid #FF8FAB; border-radius: 50px; cursor: pointer; font-family: 'Quicksand', sans-serif;
+            font-weight: bold; animation: glowingButton 2s infinite; transition: 0.3s;
+        }
+        .enter-btn:hover { background: #FF8FAB; color: white; transform: scale(1.1); }
+
+        /* ============================================================
+           4. CURSOR & PARTICLES (BUNG BUNG EFFECT)
+           ============================================================ */
+        .cursor-dot, .cursor-ring { position: fixed; top: 0; left: 0; transform: translate(-50%, -50%); border-radius: 50%; z-index: 99999999; pointer-events: none; transition: background-color 0.5s, border-color 0.5s; }
+        .cursor-dot { width: 10px; height: 10px; background-color: var(--cursor-main); box-shadow: var(--led-shadow);}
+        .cursor-ring { width: 45px; height: 45px; border: 2px solid var(--cursor-main); transition: 0.1s linear; box-shadow: var(--led-shadow); }
+        
+        .spark {
+            position: fixed; width: 8px; height: 8px; border-radius: 50%; background: var(--pink-accent);
+            pointer-events: none; z-index: 99999; box-shadow: var(--led-shadow);
+            animation: sparkAnim 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+        @keyframes sparkAnim {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0); opacity: 0; }
+        }
+
+        #particle-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+        .falling-item { position: absolute; top: -50px; user-select: none; animation: fall linear infinite; font-size: 24px; opacity: 0.6; filter: drop-shadow(0 0 5px rgba(255,143,171,0.5));}
+        @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
+
+        /* ============================================================
+           5. NAVBAR
+           ============================================================ */
+        nav {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 1100px; z-index: 999;
+            padding: 12px 30px; border-radius: 50px; display: flex; justify-content: space-between; align-items: center;
+            background: var(--nav-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border); box-shadow: var(--led-shadow); transition: 0.5s ease;
+            animation: borderPulse 4s infinite;
+        }
+        .nav-logo { font-size: 2.2rem; color: var(--pink-accent); font-weight: 900; text-decoration: none; text-shadow: var(--led-shadow); display: flex; align-items: center; gap: 10px; cursor: pointer;}
+        .nav-logo i { font-size: 1.5rem; animation: float 3s ease-in-out infinite; }
+        .nav-links { display: flex; gap: 10px; list-style: none; align-items: center; margin: 0 auto; transition: 0.3s; }
+        .nav-links a { 
+            text-decoration: none; color: var(--text-main); font-weight: 700; font-size: 1.05rem; 
+            padding: 10px 15px; border-radius: 30px; transition: 0.3s; position: relative; overflow: hidden;
+            cursor: pointer;
+        }
+        .nav-links a::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--pink-accent); opacity: 0; z-index: -1; transition: 0.3s; border-radius: 30px;
+        }
+        .nav-links a:hover { color: white; text-shadow: 0 0 5px rgba(255,255,255,0.8); }
+        .nav-links a:hover::before { opacity: 1; transform: scale(1.05); }
+
+        .nav-controls { display: flex; align-items: center; gap: 15px; }
+        .hamburger { display: none; font-size: 1.8rem; color: var(--pink-accent); cursor: pointer; }
+
+        #theme-toggle {
+            background: transparent; border: 2px solid var(--pink-accent); color: var(--pink-accent);
+            width: 45px; height: 45px; border-radius: 50%; font-size: 1.2rem; cursor: pointer;
+            display: flex; justify-content: center; align-items: center; transition: 0.3s; box-shadow: var(--led-shadow);
+        }
+        #theme-toggle:hover { background: var(--pink-accent); color: white; transform: rotate(180deg) scale(1.1); animation: glowingButton 1.5s infinite; }
+
+        /* ============================================================
+           6. HERO SECTION
+           ============================================================ */
+        .hero { height: 100vh; display: flex; align-items: center; justify-content: center; position: relative; padding-top: 60px; }
+        .hero-content { display: flex; align-items: center; gap: 40px; width: 100%; justify-content: space-between; }
+        
+        .hero-text { flex: 1.2; z-index: 2;}
+        .hero-title { font-size: 5.5rem; line-height: 1.1; font-weight: 900; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
+        .hero-title .name-gradient {
+            background: linear-gradient(90deg, var(--text-main), var(--pink-accent), var(--text-main));
+            background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            animation: bgGradient 4s linear infinite; text-shadow: var(--led-shadow);
+        }
+        
+        .typing-container { font-family: 'Playfair Display', serif; font-size: 2rem; font-style: italic; color: var(--text-sub); margin-bottom: 25px; display: flex; align-items: center; gap: 8px;}
+        .typing-container .highlight-c { color: var(--pink-accent); font-weight: bold; border-right: 3px solid var(--pink-accent); padding-right: 5px; animation: blink 0.7s infinite; }
+        @keyframes blink { 50% { border-color: transparent; } }
+
+        .btn-led {
+            display: inline-flex; align-items: center; gap: 10px; padding: 15px 40px; border-radius: 50px; 
+            text-decoration: none; font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 1.2rem;
+            border: 2px solid var(--pink-accent); position: relative; z-index: 1; overflow: hidden;
+            background: rgba(25, 0, 10, 0.4); color: var(--text-main); transition: 0.3s ease;
+            animation: glowingButton 3s infinite; cursor: pointer;
+        }
+        .btn-led::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(45deg, var(--pink-accent), var(--pink-dark)); opacity: 0; z-index: -1; transition: 0.4s; }
+        .btn-led:hover { transform: translateY(-5px) scale(1.05); color: white; }
+        .btn-led:hover::after { opacity: 1; }
+        .btn-led:hover i { animation: heartbeat 0.8s infinite; }
+
+        .hero-img-box { flex: 0.8; position: relative; display: flex; justify-content: center; }
+        .image-glow-wrap { position: relative; width: 400px; height: 400px; }
+        .image-glow-wrap::before { content: ""; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px; background: linear-gradient(45deg, var(--pink-accent), transparent, var(--pink-dark)); border-radius: 50%; z-index: -1; animation: bgGradient 3s linear infinite; filter: blur(20px); opacity: 0.8;}
+        .image-morph { width: 100%; height: 100%; overflow: hidden; border-radius: 50%; border: 6px solid var(--pink-accent); box-shadow: var(--led-shadow); }
+        .image-morph img { width: 100%; height: 100%; object-fit: cover; filter: brightness(1.1) contrast(1.05); }
+
+        /* ============================================================
+           7. ABOUT & STATS SECTION
+           ============================================================ */
+        .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: center; }
+        .info-card-box { background: var(--bg-bento); backdrop-filter: blur(10px); border: 2px solid var(--glass-border); border-radius: 24px; padding: 40px; box-shadow: var(--led-shadow); transition: 0.3s; }
+        .info-card-box:hover { border-color: var(--pink-accent); transform: translateY(-10px); }
+        
+        .about-links { list-style: none; font-size: 1.15rem; font-weight: 600; line-height: 2.2; margin-top: 20px;}
+        .about-links i { width: 35px; color: var(--pink-accent); font-size: 1.3rem; }
+        
+        .stats-container { margin-top: 30px; }
+        .stat-item { margin-bottom: 15px; }
+        .stat-title { display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 5px; font-size: 1.1rem;}
+        .stat-bar-bg { width: 100%; height: 12px; background: rgba(255,255,255,0.2); border-radius: 10px; overflow: hidden; border: 1px solid var(--glass-border);}
+        .stat-bar-fill { height: 100%; background: linear-gradient(90deg, var(--pink-dark), var(--pink-accent)); border-radius: 10px; position: relative; box-shadow: var(--led-shadow);}
+        .stat-bar-fill::after { content:""; position:absolute; top:0; left:0; right:0; bottom:0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent); animation: sweep 2s infinite; }
+        @keyframes sweep { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+        /* ============================================================
+           8. TIMELINE
+           ============================================================ */
+        .timeline-section { background: rgba(255, 77, 109, 0.02); }
+        .sec-title { text-align: center; font-size: 3.5rem; color: var(--pink-accent); margin-bottom: 60px; text-shadow: var(--led-shadow);}
+        .timeline { position: relative; max-width: 800px; margin: 0 auto; }
+        .timeline::after { content: ''; position: absolute; width: 4px; background: var(--pink-accent); top: 0; bottom: 0; left: 50%; margin-left: -2px; box-shadow: var(--led-shadow); border-radius: 10px;}
+        .tl-container { padding: 10px 40px; position: relative; background: inherit; width: 50%; }
+        .tl-left { left: 0; } .tl-right { left: 50%; }
+        .tl-container::after { content: ''; position: absolute; width: 20px; height: 20px; right: -10px; background-color: var(--bg-body); border: 4px solid var(--pink-accent); top: 15px; border-radius: 50%; z-index: 1; box-shadow: var(--led-shadow); animation: glowingButton 2s infinite;}
+        .tl-right::after { left: -10px; }
+        .tl-content { padding: 20px 30px; background: var(--bg-bento); position: relative; border-radius: 15px; border: 1px solid var(--glass-border); transition: 0.3s; }
+        .tl-content:hover { transform: scale(1.05); border-color: var(--pink-accent); box-shadow: var(--led-shadow); }
+        .tl-content h3 { color: var(--pink-accent); font-size: 1.5rem; margin-bottom: 5px;}
+        .tl-content p { font-weight: 500; font-size: 1.1rem; }
+
+        /* ============================================================
+           9. LIKES / DISLIKES & GALLERY
+           ============================================================ */
+        .pref-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+        .pref-title { font-size: 2.5rem; display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
+        .pref-item { background: var(--bg-bento); border: 2px solid var(--glass-border); border-radius: 20px; padding: 20px; margin-bottom: 15px; display: flex; align-items: center; gap: 18px; font-weight: 700; font-size: 1.15rem; transition: 0.4s; cursor: pointer; }
+        .pref-item:hover { transform: translateX(20px) scale(1.02); background: rgba(255, 77, 109, 0.1); border-color: var(--pink-accent); box-shadow: var(--led-shadow); }
+        .pref-item i { font-size: 1.8rem; width: 40px; text-align: center; color: var(--pink-accent); animation: float 3s infinite alternate;}
+
+        .art-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; grid-auto-flow: dense; }
+        .art-item { border-radius: 20px; overflow: hidden; border: 3px solid var(--glass-border); position: relative; transition: 0.4s; }
+        .art-item img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; filter: grayscale(20%); }
+        .art-item:hover { transform: scale(1.05); z-index: 2; border-color: var(--pink-accent); box-shadow: var(--led-shadow); }
+        .art-item:hover img { filter: grayscale(0%) contrast(1.1) brightness(1.1); transform: scale(1.1); }
+        .a-span-w { grid-column: span 2; } .a-span-h { grid-row: span 2; } .a-big { grid-column: span 2; grid-row: span 2; }
+        .art-caption { position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); color: white; font-weight: 700; opacity: 0; transform: translateY(20px); transition: 0.4s; }
+        .art-item:hover .art-caption { opacity: 1; transform: translateY(0); }
+
+        /* ============================================================
+           10. MINIGAME: HỒ CÁ NHỎ
+           ============================================================ */
+        .minigame-section { background: rgba(25, 0, 10, 0.4); text-align: center; border-top: 2px solid var(--pink-accent); border-bottom: 2px solid var(--pink-accent); box-shadow: inset 0 0 50px rgba(255, 77, 109, 0.2);}
+        #game-board { width: 100%; max-width: 800px; height: 400px; margin: 0 auto; background: rgba(0, 150, 255, 0.1); border: 4px dashed var(--pink-accent); border-radius: 30px; position: relative; overflow: hidden; box-shadow: var(--led-shadow);}
+        .game-fish { position: absolute; font-size: 40px; cursor: pointer; user-select: none; transition: transform 0.2s; filter: drop-shadow(0 0 10px rgba(255,255,255,0.8));}
+        .game-fish:active { transform: scale(0.8); }
+        .game-ui { display: flex; justify-content: space-around; font-size: 1.5rem; font-weight: 900; margin-bottom: 20px; color: var(--pink-accent); text-shadow: var(--led-shadow);}
+        .game-btn { margin-top: 20px; padding: 15px 40px; font-size: 1.2rem; background: var(--pink-accent); color: white; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; animation: glowingButton 2s infinite; transition: 0.3s; }
+        .game-btn:hover { background: var(--pink-dark); transform: scale(1.1); }
+
+        /* ============================================================
+           11. MAGIC QUOTE
+           ============================================================ */
+        .magic-section { background: var(--bg-bento); border-radius: 30px; padding: 50px; margin-bottom: 50px; border: 2px solid var(--pink-accent); box-shadow: var(--led-shadow); text-align: center; }
+        .magic-box { min-height: 150px; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+        .quote-text { font-family: 'Playfair Display', serif; font-size: 2rem; font-style: italic; color: var(--pink-accent); margin-bottom: 30px; line-height: 1.4; transition: opacity 0.5s;}
+
+        /* ============================================================
+           12. KẾT NỐI VỚI CÁ
+           ============================================================ */
+        .social-container { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-top: 40px; }
+        .social-card {
+            width: 180px; height: 180px; background: var(--bg-bento); border: 2px solid var(--glass-border); 
+            border-radius: 30px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-decoration: none; color: var(--text-main); font-weight: 700; font-size: 1.2rem; gap: 15px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; position: relative; overflow: hidden;
+        }
+        .social-card i { font-size: 3.5rem; transition: 0.4s; }
+        .social-card::before { content: ""; position: absolute; top: 100%; left: 0; width: 100%; height: 100%; transition: 0.4s; z-index: -1; }
+        .social-card:hover { transform: translateY(-15px); color: white; border-color: transparent; box-shadow: var(--led-shadow); }
+        .social-card:hover i { transform: scale(1.2) rotate(10deg); color: white !important;}
+        .social-card:hover::before { top: 0; }
+        
+        .sc-fb i { color: #1877F2; } .sc-fb:hover::before { background: #1877F2; }
+        .sc-ig i { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; } .sc-ig:hover i { -webkit-text-fill-color: white; } .sc-ig:hover::before { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
+        .sc-tt i { color: #000000; text-shadow: 2px 2px 0px #00f2fe, -2px -2px 0px #fe0979;} [data-theme="dark"] .sc-tt i { color: white; } .sc-tt:hover::before { background: #000000; } .sc-tt:hover i { color: white; text-shadow: none; }
+        .sc-lk i { color: #FFB300; } .sc-lk:hover::before { background: #FFB300; } 
+
+        /* ============================================================
+           13. FOOTER
+           ============================================================ */
+        footer { text-align: center; padding: 40px 0; border-top: 1px solid var(--glass-border); margin-top: 50px;}
+        .footer-logo { font-size: 3rem; color: var(--pink-accent); font-family: 'Playfair Display'; margin-bottom: 10px; animation: heartbeat 2s infinite;}
+        
+        /* Fixed Elements */
+        #music-player { position: fixed; bottom: 20px; left: 20px; z-index: 1000; background: var(--nav-bg); padding: 10px 20px; border-radius: 50px; border: 1px solid var(--glass-border); display: flex; align-items: center; gap: 15px; box-shadow: var(--led-shadow); animation: borderPulse 3s infinite;}
+        #play-btn { background: var(--pink-accent); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 1rem; cursor: pointer; transition: 0.3s; box-shadow: 0 0 10px var(--pink-accent); }
+        #play-btn:hover { transform: scale(1.1); }
+        #scroll-top-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: var(--pink-accent); color: white; border: none; border-radius: 50%; font-size: 1.5rem; cursor: pointer; display: none; z-index: 1000; box-shadow: var(--led-shadow); transition: 0.3s; animation: glowingButton 2s infinite;}
+        #scroll-top-btn:hover { transform: translateY(-10px); }
+
+        /* ============================================================
+           14. MOBILE RESPONSIVE (TỐI ƯU SIÊU MƯỢT CHO ĐIỆN THOẠI)
+           ============================================================ */
+        @media (max-width: 900px) {
+            /* Ẩn trỏ chuột máy tính trên màn hình cảm ứng, trả lại thao tác chạm */
+            .cursor-dot, .cursor-ring { display: none !important; }
+            body { cursor: auto !important; }
+
+            /* Điều chỉnh không gian */
+            .section-p { padding: 80px 0; }
+            .hero-content, .about-grid, .pref-grid { grid-template-columns: 1fr; gap: 30px; }
+            
+            /* Navbar & Menu Hamburger */
+            nav { padding: 15px 25px; border-radius: 30px; }
+            .hamburger { display: block; }
+            .nav-links {
+                position: absolute; top: 110%; left: 0; width: 100%;
+                background: var(--nav-bg); backdrop-filter: blur(20px);
+                flex-direction: column; padding: 20px 0; border-radius: 20px;
+                border: 1px solid var(--glass-border); box-shadow: var(--led-shadow);
+                opacity: 0; visibility: hidden; transition: 0.3s ease;
+            }
+            .nav-links.active { opacity: 1; visibility: visible; }
+            .nav-links li { width: 100%; text-align: center; }
+            .nav-links a { display: block; padding: 15px; font-size: 1.2rem; }
+            
+            /* Typography & Cỡ ảnh Mobile */
+            .hero-text { text-align: center; } 
+            .hero-desc { margin: 0 auto 30px; font-size: 1rem !important; }
+            .hero-title { font-size: 3rem; }
+            .sec-title { font-size: 2.5rem; }
+            .typing-container { font-size: 1.4rem; justify-content: center;}
+            .image-glow-wrap { width: 280px; height: 280px; margin: 0 auto; }
+            .info-card-box { padding: 25px; }
+
+            /* Timeline Mobile Fix */
+            .timeline::after { left: 20px; }
+            .tl-container { width: 100%; padding-left: 50px; padding-right: 15px; }
+            .tl-right { left: 0; }
+            .tl-left::after, .tl-right::after { left: 10px; }
+            
+            /* Gallery & Cards */
+            .art-grid { grid-template-columns: repeat(2, 1fr); gap: 10px;}
+            .a-span-w, .a-span-h, .a-big { grid-column: span 1; grid-row: span 1; }
+            .social-card { width: 130px; height: 130px; font-size: 1rem; }
+            .social-card i { font-size: 2.5rem; }
+            .magic-box { padding: 20px; }
+            .quote-text { font-size: 1.5rem; }
+
+            /* Minigame Mobile */
+            #game-board { height: 300px; }
+            .game-ui { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+    <audio id="bg-music" loop>
+        <source src="nhac.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="click-sound">
+        <source src="pop.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="entrance-screen">
+        <h1>Sẵn sàng bước vào thế giới của Cá? 🐟</h1>
+        <button class="enter-btn" id="start-btn">Khám phá ngay ✨</button>
+    </div>
+
+    <div id="particle-container"></div>
+    <div class="cursor-dot" id="cursor-dot"></div>
+    <div class="cursor-ring" id="cursor-ring"></div>
+
+    <button id="scroll-top-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})"><i class="fas fa-chevron-up"></i></button>
+    <div id="music-player">
+        <button id="play-btn"><i class="fas fa-pause"></i></button>
+        <div style="font-weight: 700; font-size: 0.9rem;">
+            <div style="color: var(--pink-accent);">A Little Thing</div>
+            <div style="color: var(--text-sub); font-size: 0.8rem;">for Cá ❤️</div>
+        </div>
+    </div>
+
+    <nav>
+        <a href="#home" class="nav-logo"><i class="fas fa-fish"></i> Cá.</a>
+        <ul class="nav-links">
+            <li><a href="#home"><i class="fas fa-home"></i> Trang chủ</a></li>
+            <li><a href="#about"><i class="fas fa-user"></i> Về Linh</a></li>
+            <li><a href="#timeline"><i class="fas fa-route"></i> Hành trình</a></li>
+            <li><a href="#gallery"><i class="fas fa-images"></i> Ảnh xinh</a></li>
+            <li><a href="#minigame"><i class="fas fa-gamepad"></i> Game</a></li>
+            <li><a href="#connect"><i class="fas fa-link"></i> Kết nối</a></li>
+        </ul>
+        <div class="nav-controls">
+            <button id="theme-toggle"><i class="fas fa-moon"></i></button>
+            <div class="hamburger" id="hamburger"><i class="fas fa-bars"></i></div>
+        </div>
+    </nav>
+
+    <section class="hero" id="home">
+        <div class="container hero-content">
+            <div class="hero-text reveal">
+                <h3 style="font-family: 'Playfair Display'; font-style: italic; color: var(--text-sub);">Xin chào, đây là thế giới của</h3>
+                <h1 class="hero-title"><span class="name-gradient">Nguyễn Thùy Linh</span></h1>
+                <div class="typing-container">Một <span id="typing" class="highlight-c"></span></div>
+                <p class="hero-desc" style="font-size: 1.2rem; line-height: 1.8; margin-bottom: 40px; max-width: 550px;">Yêu cái đẹp, thích kiếm tiền, luôn dịu dàng nhưng cũng đầy nhiệt huyết. Nơi lưu giữ thanh xuân và những khoảnh khắc lấp lánh nhất!</p>
+                <a href="#about" class="btn-led"><i class="fas fa-sparkles"></i> Xem Profile Xịn Xò</a>
+            </div>
+            <div class="hero-img-box reveal">
+                <div class="image-glow-wrap">
+                    <div class="image-morph"><img src="https://i.ibb.co/FqNxpsk5/432fca4d-4e4f-4e8a-93f3-ce8dc7e7db19.jpg" alt="Thùy Linh"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="about section-p" id="about">
+        <div class="container about-grid">
+            <div class="about-img reveal">
+                <div class="info-card-box" style="padding: 15px;">
+                    <img src="https://i.ibb.co/XxN3jbgv/c0883bf8-c1f4-4cda-bb60-37ead1cfe0af.jpg" alt="Linh" style="width: 100%; border-radius: 15px; border: 2px solid var(--pink-accent);">
+                </div>
+            </div>
+            <div class="about-info reveal">
+                <h2 class="sec-title" style="text-align: left; margin-bottom: 20px;">Hồ sơ <span style="font-style: italic;">Cá Nhỏ</span></h2>
+                <div class="info-card-box">
+                    <p style="font-size: 1.1rem; line-height: 1.8;">Chào đằng ấy! Tớ là <strong>Thùy Linh</strong> (hay còn gọi là Cá 🐟). Tớ mang trong mình sự bí ẩn của Thần Nông và nét dịu dàng nhưng không kém phần cá tính.</p>
+                    <ul class="about-links">
+                        <li><i class="fas fa-id-badge"></i> <strong>Họ & Tên:</strong> Nguyễn Thùy Linh</li>
+                        <li><i class="fas fa-fish"></i> <strong>Biệt danh:</strong> Cá Nhỏ</li>
+                        <li><i class="fas fa-birthday-cake"></i> <strong>Ngày sinh:</strong> 05/11/2008</li>
+                        <li><i class="fas fa-star"></i> <strong>Cung hoàng đạo:</strong> Thần Nông (Scorpio 🦂)</li>
+                    </ul>
+                    
+                    <div class="stats-container">
+                        <div class="stat-item">
+                            <div class="stat-title"><span>Độ đáng yêu 💖</span><span>100%</span></div>
+                            <div class="stat-bar-bg"><div class="stat-bar-fill" style="width: 100%;"></div></div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-title"><span>Trực giác Thần Nông 🔮</span><span>99%</span></div>
+                            <div class="stat-bar-bg"><div class="stat-bar-fill" style="width: 99%;"></div></div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-title"><span>Kỹ năng Makeup 💄</span><span>99%</span></div>
+                            <div class="stat-bar-bg"><div class="stat-bar-fill" style="width: 99%;"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="timeline-section section-p" id="timeline">
+        <div class="container">
+            <h2 class="sec-title">Hành Trình Của <span style="font-style: italic;">Cá</span></h2>
+            <div class="timeline">
+                <div class="tl-container tl-left reveal">
+                    <div class="tl-content">
+                        <h3>05/11/2008 👶</h3>
+                        <p>Một em "Cá" Thần Nông chính thức debut với thế giới, mang theo sự bướng bỉnh và đáng yêu vô cực.</p>
+                    </div>
+                </div>
+                <div class="tl-container tl-right reveal">
+                    <div class="tl-content">
+                        <h3>Tuổi học trò 🎒</h3>
+                        <p>Những tháng năm thanh xuân rực rỡ bên bạn bè, những bức ảnh Photobooth lấp lánh.</p>
+                    </div>
+                </div>
+                <div class="tl-container tl-left reveal">
+                    <div class="tl-content">
+                        <h3>Hiện tại ✨</h3>
+                        <p>Trở thành một cô gái xinh đẹp, yêu makeup, đam mê kiếm tiền và luôn tỏa sáng theo cách riêng!</p>
+                    </div>
+                </div>
+                <div class="tl-container tl-right reveal">
+                    <div class="tl-content">
+                        <h3>Tương lai 🚀</h3>
+                        <p>Rich kid tự thân, CEO thành đạt, đi du lịch vòng quanh thế giới và... bắt được một anh "ngư dân" xịn xò? =))</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="preferences section-p" id="preferences">
+        <div class="container pref-grid">
+            <div class="likes reveal">
+                <h3 class="pref-title"><i class="fas fa-heart" style="color:#d90429;"></i> Cực kỳ Đam Mê</h3>
+                <div class="pref-item"><i class="fas fa-sack-dollar"></i> Tiền! Nhiều Tiền! Tiền rơi vào đầu!</div>
+                <div class="pref-item"><i class="fas fa-camera-retro"></i> Chụp ảnh ảo diệu, Photobooth</div>
+                <div class="pref-item"><i class="fas fa-magic"></i> Makeup lồng lộn, Skincare các thứ</div>
+                <div class="pref-item"><i class="fas fa-bowl-food"></i> Mì cay, Đồ nướng, Trà sữa full topping</div>
+            </div>
+            <div class="dislikes reveal">
+                <h3 class="pref-title"><i class="fas fa-skull" style="color:#495057;"></i> Xin hãy Né Xa</h3>
+                <div class="pref-item"><i class="fas fa-bug"></i> Côn trùng (eo ôi sợ lắm!)</div>
+                <div class="pref-item"><i class="fas fa-calculator"></i> Môn Toán (nhìn số là hoa mắt)</div>
+                <div class="pref-item"><i class="fas fa-magnet"></i> Môn Lý (lực hút đẩy gì không hiểu)</div>
+                <div class="pref-item"><i class="fas fa-vial"></i> Môn Hóa (phản ứng duy nhất là muốn ngủ)</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="minigame-section section-p" id="minigame">
+        <div class="container reveal">
+            <h2 class="sec-title" style="margin-bottom: 20px;">Trò Chơi: <span style="font-style: italic;">Hồ Cá Nhỏ</span></h2>
+            <p style="font-size: 1.2rem; margin-bottom: 40px; color: var(--text-sub);">Thử thách sự nhanh tay của bạn! Bấm vào các chú cá đang bơi để ghi điểm nha!</p>
+            
+            <div class="game-ui">
+                <div>Điểm: <span id="game-score">0</span> 🐟</div>
+                <div>Thời gian: <span id="game-time">30</span>s ⏳</div>
+            </div>
+            
+            <div id="game-board">
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--pink-accent); opacity: 0.5; font-size: 1.5rem; font-weight: bold; pointer-events: none; text-align: center; width: 100%;">Khu vực thả lưới</div>
+            </div>
+            
+            <button class="game-btn" id="start-game-btn"><i class="fas fa-play"></i> Bắt đầu chơi</button>
+        </div>
+    </section>
+
+    <section class="section-p" id="magic">
+        <div class="container reveal">
+            <h2 class="sec-title">Thông Điệp <span style="font-style: italic;">Vũ Trụ</span></h2>
+            <div class="magic-section">
+                <div class="magic-box">
+                    <div class="quote-text" id="quote-display">"Hãy chạm vào chiếc nút ma thuật bên dưới để xem vũ trụ muốn gửi gắm điều gì tới Cá ngày hôm nay nhé! ✨"</div>
+                    <button class="btn-led" id="btn-draw-quote"><i class="fas fa-star"></i> Rút Thông Điệp</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-p" id="connect" style="background: rgba(255, 77, 109, 0.02);">
+        <div class="container reveal">
+            <h2 class="sec-title" style="margin-bottom: 10px;">Kết Nối Với <span style="font-style: italic;">Cá Nhỏ</span></h2>
+            <p class="text-center" style="font-size: 1.2rem; color: var(--text-sub);">Đừng ngại ngùng, hãy click vào để làm quen với tớ nha! ❤️</p>
+            
+            <div class="social-container">
+                <a href="https://www.facebook.com/swt.juwi" target="_blank" class="social-card sc-fb">
+                    <i class="fab fa-facebook-f"></i>
+                    <span>Facebook</span>
+                </a>
+                <a href="https://www.instagram.com/t_uy.hnil" target="_blank" class="social-card sc-ig">
+                    <i class="fab fa-instagram"></i>
+                    <span>Instagram</span>
+                </a>
+                <a href="https://www.tiktok.com/@n.tli_h" target="_blank" class="social-card sc-tt">
+                    <i class="fab fa-tiktok"></i>
+                    <span>TikTok</span>
+                </a>
+                <a href="https://locket.cam/emlinhday" target="_blank" class="social-card sc-lk">
+                    <i class="fas fa-camera"></i>
+                    <span>Locket</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="art-gallery section-p" id="gallery">
+        <div class="container reveal">
+            <h2 class="sec-title">Phòng <span style="font-style: italic;">Trưng Bày</span></h2>
+            <div class="art-grid">
+                <div class="art-item a-span-h"><img src="https://i.ibb.co/FLLs2L4W/659084bc-e47c-4c69-a660-ae9332085b52.jpg" alt="Linh"><div class="art-caption">Xinh gái nhất phố! ❤️</div></div>
+                <div class="art-item"><img src="https://i.ibb.co/Sz0L2C0/52ceb30d-12b7-437d-8119-e9a846dfcd70.jpg" alt="Linh"><div class="art-caption">Makeup bén ngót ✨</div></div>
+                <div class="art-item a-big"><img src="https://i.ibb.co/C3kvzs25/23c34ffe-be6a-48cd-b67d-83b59b11a519.jpg" alt="Linh"><div class="art-caption">Góc nghiêng thần thánh 🐟</div></div>
+                <div class="art-item"><img src="https://i.ibb.co/tTf83M6B/a0dae0cb-6e8c-4893-86c3-8c7ec39534ec.jpg" alt="Linh"><div class="art-caption">Nụ cười tỏa nắng 😊</div></div>
+                <div class="art-item a-span-w"><img src="https://i.ibb.co/jZ9BVrs4/084da3fe-fdb8-40a1-9e1f-54479ea72bf5.jpg" alt="Linh"><div class="art-caption">Đẹp xuất sắc ✨</div></div>
+                <div class="art-item"><img src="https://i.ibb.co/HTCzNbKh/e3c9889a-9a5d-4b25-b699-20068d1ad637.jpg" alt="Linh"><div class="art-caption">Check-in muôn nơi ✈️</div></div>
+                <div class="art-item"><img src="https://i.ibb.co/vx8VXGzy/1ae2a1c6-6a6c-446c-a919-9ed28bd469b3.jpg" alt="Linh"><div class="art-caption">Nàng thơ 💫</div></div>
+                <div class="art-item"><img src="https://i.ibb.co/GvwCBzxc/4909af80-2ad2-427e-a159-70f1d2f20890.jpg" alt="Linh"><div class="art-caption">Scorpio Vibes 🦂</div></div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <h3 class="footer-logo">Cá.</h3>
+            <p style="font-size: 1.1rem; color: var(--text-sub); margin-bottom: 10px;">Cảm ơn đã dành thời gian ghé thăm trạm dừng chân của Thùy Linh!</p>
+            <p style="font-size: 0.9rem; opacity: 0.7;">Bản quyền thuộc về GK </p>
+        </div>
+    </footer>
+
+    <script>
+        // --- 1. ENTRANCE SCREEN & MUSIC ---
+        const entrance = document.getElementById('entrance-screen');
+        const bgMusic = document.getElementById('bg-music');
+        const clickSound = document.getElementById('click-sound');
+        const playBtn = document.getElementById('play-btn');
+        let playing = true;
+
+        document.getElementById('start-btn').addEventListener('click', () => {
+            entrance.style.opacity = '0';
+            setTimeout(() => { entrance.style.visibility = 'hidden'; }, 1000);
+            
+            bgMusic.volume = 0.4;
+            bgMusic.play().catch(e => console.log("Cần click tay nút Play"));
+            startRainEffect();
+        });
+
+        playBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (playing) { bgMusic.pause(); playBtn.innerHTML = '<i class="fas fa-play"></i>'; } 
+            else { bgMusic.play(); playBtn.innerHTML = '<i class="fas fa-pause"></i>'; }
+            playing = !playing;
+        });
+
+        // --- 2. MENU HAMBURGER CHO ĐIỆN THOẠI ---
+        const hamburger = document.getElementById('hamburger');
+        const navLinksMenu = document.querySelector('.nav-links');
+        
+        hamburger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            navLinksMenu.classList.toggle('active');
+        });
+        
+        // Tự động đóng menu khi bấm vào link
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinksMenu.classList.remove('active');
+            });
+        });
+
+        // --- 3. HIỆU ỨNG MƯA TIM / CÁ ---
+        const container = document.getElementById('particle-container');
+        const items = ['💖', '🐟', '✨', '🐠', '🌸'];
+        
+        function createParticle() {
+            const el = document.createElement('div');
+            el.classList.add('falling-item');
+            el.innerText = items[Math.floor(Math.random() * items.length)];
+            el.style.left = Math.random() * 100 + 'vw';
+            el.style.animationDuration = Math.random() * 3 + 4 + 's';
+            el.style.fontSize = Math.random() * 15 + 15 + 'px';
+            container.appendChild(el);
+            setTimeout(() => { el.remove(); }, 7000);
+        }
+        function startRainEffect() { setInterval(createParticle, 400); }
+
+        // --- 4. CUSTOM CURSOR & HIỆU ỨNG BUNG BUNG KHI CLICK ---
+        const dot = document.getElementById("cursor-dot");
+        const ring = document.getElementById("cursor-ring");
+        
+        window.addEventListener("mousemove", (e) => {
+            // Chỉ chạy khi chuột hiển thị
+            if(window.innerWidth > 900) {
+                dot.style.left = `${e.clientX}px`; dot.style.top = `${e.clientY}px`;
+                ring.animate({ left: `${e.clientX}px`, top: `${e.clientY}px` }, { duration: 100, fill: "forwards" });
+            }
+        });
+        
+        window.addEventListener("click", (e) => {
+            clickSound.currentTime = 0;
+            clickSound.volume = 0.5;
+            clickSound.play().catch(()=>{});
+
+            // Vòng tròn co giật (chỉ trên PC)
+            if(window.innerWidth > 900) {
+                ring.style.transform = "translate(-50%, -50%) scale(2)";
+                ring.style.opacity = "0";
+                setTimeout(() => {
+                    ring.style.transition = "none";
+                    ring.style.transform = "translate(-50%, -50%) scale(1)";
+                    ring.style.opacity = "1";
+                    setTimeout(() => { ring.style.transition = "0.1s linear"; }, 50);
+                }, 300);
+            }
+
+            // Hiệu ứng "Bung Bung" các hạt li ti
+            for (let i = 0; i < 8; i++) {
+                const spark = document.createElement('div');
+                spark.classList.add('spark');
+                document.body.appendChild(spark);
+                spark.style.left = e.clientX + 'px';
+                spark.style.top = e.clientY + 'px';
+                
+                const angle = (Math.PI * 2 * i) / 8;
+                const distance = 60; 
+                spark.style.setProperty('--tx', Math.cos(angle) * distance + 'px');
+                spark.style.setProperty('--ty', Math.sin(angle) * distance + 'px');
+                
+                setTimeout(() => spark.remove(), 600);
+            }
+        });
+
+        // --- 5. SCROLL REVEAL ---
+        function reveal() {
+            var reveals = document.querySelectorAll(".reveal");
+            for (var i = 0; i < reveals.length; i++) {
+                var windowHeight = window.innerHeight;
+                var elementTop = reveals[i].getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) reveals[i].classList.add("active");
+            }
+            document.getElementById('scroll-top-btn').style.display = window.scrollY > 500 ? 'block' : 'none';
+        }
+        window.addEventListener("scroll", reveal);
+        reveal(); 
+
+        // --- 6. TYPING EFFECT ---
+        const typingTextSpan = document.getElementById('typing');
+        const phrases = ["Thần Nông cuốn hút...", "Chuyên gia Makeup...", "Nữ doanh nhân 2008...", "Giao diện siêu ngầu!"];
+        let pIndex = 0; let cIndex = 0; let deleting = false;
+        function type() {
+            const curText = phrases[pIndex];
+            if (deleting) {
+                typingTextSpan.textContent = curText.substring(0, cIndex - 1);
+                cIndex--;
+            } else {
+                typingTextSpan.textContent = curText.substring(0, cIndex + 1);
+                cIndex++;
+            }
+            let speed = deleting ? 50 : 120;
+            if (!deleting && cIndex === curText.length) { speed = 2000; deleting = true; }
+            else if (deleting && cIndex === 0) { deleting = false; pIndex = (pIndex + 1) % phrases.length; speed = 500; }
+            setTimeout(type, speed);
+        }
+        type();
+
+        // --- 7. DARK / LIGHT MODE ---
+        const themeBtn = document.getElementById('theme-toggle');
+        const themeIcon = themeBtn.querySelector('i');
+        themeBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); 
+            const current = document.documentElement.getAttribute('data-theme');
+            if (current === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'light'); 
+                themeIcon.className = 'fas fa-sun';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark'); 
+                themeIcon.className = 'fas fa-moon';
+            }
+        });
+
+        // --- 8. MINIGAME ---
+        const gameBoard = document.getElementById('game-board');
+        const startBtn = document.getElementById('start-game-btn');
+        const scoreUI = document.getElementById('game-score');
+        const timeUI = document.getElementById('game-time');
+        
+        let score = 0; let timeLeft = 30;
+        let gameInterval, spawnInterval; let isPlaying = false;
+        const fishIcons = ['🐠', '🐟', '🐡', '🦈', '🦀'];
+
+        function spawnFishInGame() {
+            if(!isPlaying) return;
+            const fish = document.createElement('div');
+            fish.classList.add('game-fish');
+            fish.innerText = fishIcons[Math.floor(Math.random() * fishIcons.length)];
+            
+            const maxX = gameBoard.clientWidth - 50; const maxY = gameBoard.clientHeight - 50;
+            fish.style.left = Math.random() * maxX + 'px'; fish.style.top = Math.random() * maxY + 'px';
+            
+            fish.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if(!isPlaying) return;
+                score += 10; scoreUI.innerText = score;
+                fish.innerText = '✨'; fish.style.pointerEvents = 'none';
+                clickSound.currentTime = 0; clickSound.play().catch(()=>{});
+                setTimeout(() => fish.remove(), 200);
+            });
+            gameBoard.appendChild(fish);
+            setTimeout(() => { if(fish.parentNode) fish.remove(); }, 1500);
+        }
+
+        startBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if(isPlaying) return;
+            isPlaying = true; score = 0; timeLeft = 30;
+            scoreUI.innerText = score; timeUI.innerText = timeLeft;
+            gameBoard.innerHTML = ''; 
+            startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang chơi...';
+            startBtn.style.opacity = '0.5';
+
+            gameInterval = setInterval(() => {
+                timeLeft--; timeUI.innerText = timeLeft;
+                if(timeLeft <= 0) endGame();
+            }, 1000);
+            spawnInterval = setInterval(spawnFishInGame, 800); // Điều chỉnh tốc độ sinh cá cho mobile dễ chơi hơn
+        });
+
+        function endGame() {
+            isPlaying = false;
+            clearInterval(gameInterval); clearInterval(spawnInterval);
+            gameBoard.innerHTML = `<div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-size: 1.5rem; color: var(--pink-accent); font-weight: bold; width: 100%; text-align:center;">Hết giờ! Điểm: ${score} 🐟<br><span style="font-size:1rem; color:var(--text-sub);">Bạn dính thính Cá rồi!</span></div>`;
+            startBtn.innerHTML = '<i class="fas fa-redo"></i> Chơi lại'; startBtn.style.opacity = '1';
+        }
+
+        // --- 9. MAGIC QUOTE ---
+        const quotes = [
+            "✨ Hôm nay là một ngày tuyệt vời để bạn tỏa sáng! Đừng ngần ngại nhé! ✨",
+            "🐟 Cá nhỏ dặn dò: Nhớ uống đủ nước và cười thật tươi nha! 🐟",
+            "💖 Bạn đang làm rất tốt rồi, vũ trụ gửi đến bạn một cái ôm thật chặt! 💖",
+            "💄 Đừng quên tô một chút son để thấy cuộc đời thêm rực rỡ! 💄",
+            "💰 Tín hiệu từ vũ trụ: Tiền tài sắp ập vào người bạn rồi đó, chuẩn bị đỡ đi! 💰",
+            "🦂 Năng lượng Thần Nông: Quyết đoán lên, điều bạn muốn đang đến rất gần! 🦂",
+            "🌟 Hãy luôn giữ lấy sự nhiệt huyết, vì thanh xuân là để rực rỡ! 🌟",
+            "😎 Người ta có thể copy phong cách của bạn, nhưng không thể copy thần thái của bạn! 😎"
+        ];
+        
+        const quoteDisplay = document.getElementById('quote-display');
+        const btnDrawQuote = document.getElementById('btn-draw-quote');
+
+        btnDrawQuote.addEventListener('click', (e) => {
+            e.stopPropagation();
+            clickSound.currentTime = 0; clickSound.play().catch(()=>{});
+            quoteDisplay.style.opacity = 0;
+            setTimeout(() => {
+                const randomIndex = Math.floor(Math.random() * quotes.length);
+                quoteDisplay.innerText = quotes[randomIndex];
+                quoteDisplay.style.opacity = 1;
+            }, 500); 
+        });
+
+    </script>
+</body>
+</html>
